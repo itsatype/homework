@@ -2,18 +2,13 @@ require 'pry'
 require 'csv'
 
 class PlanFinder 
+	
 	attr_reader :zips, :plans, :slcsp_rate
 	
 	def initialize
 		read_file('plans.csv')
 		read_file('zips.csv')
 		slcsp_for_csv_zipcodes('slcsp.csv')
-	end
-
-	def find_plans_for_zip(zipcode)
-		@zips = zip_finder(zipcode)
-		@plans = plan_finder if zips.count == 1 || same_zip_rate_area?
-		@slcsp_rate = find_slcsp.rate if plans.any?
 	end
 
 	def slcsp_for_csv_zipcodes(path)
@@ -24,6 +19,14 @@ class PlanFinder
 			CSV.open("test.csv", "ab") { |csv| csv << [zipcode, slcsp_rate] }
 		end
 	end
+
+
+	def find_plans_for_zip(zipcode)
+		@zips = Zip.lookup(zipcode)
+		@plans = Plan.lookup(zips.first) if zips.count == 1 || same_zip_rate_area?
+		@slcsp_rate = find_slcsp.rate if plans.any?
+	end
+
 
 	def same_zip_rate_area?
 		zips.collect { |zip| zip.rate_area }.uniq.count == 1
@@ -38,15 +41,7 @@ class PlanFinder
 		end
 	end
 
-	def zip_finder(zipcode)
-		Zip.all.select { |zips| zips.zipcode == zipcode }
-	end
 
-	def plan_finder
-		Plan.all.select do |plan| 
-			plan.state == zips.first.state && plan.rate_area == zips.first.rate_area && plan.metal_level == "Silver"
-		end
-	end
 
 	def find_slcsp
 		plans.sort_by { |plan|	plan.rate }[1] 
@@ -71,6 +66,13 @@ class Plan
 		@@all
 	end
 
+
+	def self.lookup(zipcode)
+		self.all.select do |plan| 
+			plan.state == zipcode.state && plan.rate_area == zipcode.rate_area && plan.metal_level == "Silver"
+		end
+	end	
+
 end
 
 
@@ -91,6 +93,8 @@ class Zip
 		@@all
 	end
 
-end
+	def self.lookup(zipcode)
+		self.all.select { |zips| zips.zipcode == zipcode }
+	end	
 
-PlanFinder.new
+end
