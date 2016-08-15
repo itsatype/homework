@@ -4,9 +4,13 @@ require 'csv'
 module ParseCSV
 
 	def read_csv(path)
-		csv_rows = CSV.read(path, headers: true)
-		self.rows_to_object(csv_rows)
+		CSV.read(path, headers: true)
 	end
+
+  def csv_rows_to_object(path)
+    csv_rows = read_csv(path)
+    self.rows_to_object(csv_rows)
+  end
 
 	def rows_to_object(csv_rows)
 		csv_rows.each do |csv_row|
@@ -22,14 +26,21 @@ class PlanFinder
 	
 	attr_reader :zips, :plans, :slcsp_rate
 	
+  # def self.run
+  #   Plan.read_csv('plans.csv')
+  #   Zip.read_csv('zips.csv')
+  #   PlanFinder.read_csv('slcsp')
+  #   slcsp_for_csv_zipcodes  (interate all, account for instance and classes)
+  # end
+
 	def initialize
-		Plan.read_csv('plans.csv')
-		Zip.read_csv('zips.csv')
+		Plan.csv_rows_to_object('plans.csv')
+		Zip.csv_rows_to_object('zips.csv')
 		slcsp_for_csv_zipcodes('slcsp.csv')
 	end
 
 	def slcsp_for_csv_zipcodes(path)
-		csv_rows = CSV.read(path, headers: true)
+    csv_rows = self.class.read_csv(path)
 		csv_rows.each do |csv_row| 
 			zipcode = csv_row["zipcode"]
 			find_plans_for_zip(zipcode)
@@ -49,16 +60,6 @@ class PlanFinder
 		zips.collect { |zip| zip.rate_area }.uniq.count == 1
 		#account for different states but same rate_area
 	end
-
-
-	# def read_file(path)
-	# 	csv_rower = CSV.read(path, headers: true)		
-	# 	csv_rows.each do |csv_row|
-	# 		path == 'plans.csv' ? Plan.new(csv_row.to_hash) : Zip.new(csv_row.to_hash)
-	# 	end
-	# end
-
-
 
 	def find_slcsp
 		plans.sort_by { |plan|	plan.rate }[1] 
@@ -81,16 +82,16 @@ class Plan
 		@@all << self
 	end
 
-	def self.all
-		@@all
-	end
-
 
 	def self.lookup(zipcode)
 		self.all.select do |plan| 
 			plan.state == zipcode.state && plan.rate_area == zipcode.rate_area && plan.metal_level == "Silver"
 		end
 	end	
+
+  def self.all
+    @@all
+  end  
 
 end
 
@@ -110,12 +111,13 @@ class Zip
 		@@all << self
 	end
 
-	def self.all
-		@@all
-	end
 
 	def self.lookup(zipcode)
 		self.all.select { |zips| zips.zipcode == zipcode }
 	end	
+
+  def self.all
+    @@all
+  end  
 
 end

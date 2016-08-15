@@ -1,10 +1,8 @@
 require_relative 'spec_helper'
 
 describe PlanFinder do
-	 
-	 plan_finder = PlanFinder.new
-
   it "finds all zipcodes for a given zipcode" do
+  	plan_finder = PlanFinder.new
   	zipcodes = plan_finder.zips
   	expect(zipcodes.count).to eq (3)
   end
