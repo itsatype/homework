@@ -1,13 +1,30 @@
 require 'pry'
 require 'csv'
 
-class PlanFinder 
+module ParseCSV
+
+	def read_csv(path)
+		csv_rows = CSV.read(path, headers: true)
+		self.rows_to_object(csv_rows)
+	end
+
+	def rows_to_object(csv_rows)
+		csv_rows.each do |csv_row|
+			self.new(csv_row.to_hash)
+		end
+	end
+
+end
+
+class PlanFinder
+	
+	extend ParseCSV
 	
 	attr_reader :zips, :plans, :slcsp_rate
 	
 	def initialize
-		read_file('plans.csv')
-		read_file('zips.csv')
+		Plan.read_csv('plans.csv')
+		Zip.read_csv('zips.csv')
 		slcsp_for_csv_zipcodes('slcsp.csv')
 	end
 
@@ -34,12 +51,12 @@ class PlanFinder
 	end
 
 
-	def read_file(path)
-		csv_rows = CSV.read(path, headers: true)
-		csv_rows.each do |csv_row|
-			path == 'plans.csv' ? Plan.new(csv_row.to_hash) : Zip.new(csv_row.to_hash)
-		end
-	end
+	# def read_file(path)
+	# 	csv_rower = CSV.read(path, headers: true)		
+	# 	csv_rows.each do |csv_row|
+	# 		path == 'plans.csv' ? Plan.new(csv_row.to_hash) : Zip.new(csv_row.to_hash)
+	# 	end
+	# end
 
 
 
@@ -49,7 +66,9 @@ class PlanFinder
 
 end
 
-class Plan
+class Plan 
+
+	extend ParseCSV
 
 	attr_accessor :plan_id, :state, :metal_level, :rate, :rate_area
 
@@ -76,7 +95,9 @@ class Plan
 end
 
 
-class Zip
+class Zip 
+
+	extend ParseCSV
 
 	attr_accessor :zipcode, :state, :fips, :name, :rate_area
 
