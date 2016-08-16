@@ -3,16 +3,8 @@ require 'csv'
 
 module ParseCSV
 
-	def read_csv(path)
-		CSV.read(path, headers: true)
-	end
-
-  def csv_rows_to_object(path)
-    csv_rows = read_csv(path)
-    self.rows_to_object(csv_rows)
-  end
-
-	def rows_to_object(csv_rows)
+	def csv_rows_to_object(path)
+    csv_rows = CSV.read(path, headers: true)
 		csv_rows.each do |csv_row|
 			self.new(csv_row.to_hash)
 		end
@@ -20,39 +12,44 @@ module ParseCSV
 
 end
 
+module Init
+
+  def init(csv_row)
+    csv_row.each do |attribute, value| 
+      instance_variable_set("@#{attribute}", value) 
+    end
+  end
+
+end  
+
 class PlanFinder
 	
 	extend ParseCSV
+  include Init
 	
-	attr_reader :zips, :plans, :slcsp_rate
+	attr_accessor :zips, :plans, :rate, :zipcode
 	
-  # def self.run
-  #   Plan.read_csv('plans.csv')
-  #   Zip.read_csv('zips.csv')
-  #   PlanFinder.read_csv('slcsp')
-  #   slcsp_for_csv_zipcodes  (interate all, account for instance and classes)
-  # end
+  @@all ||= Array.new  
 
-	def initialize
-		Plan.csv_rows_to_object('plans.csv')
-		Zip.csv_rows_to_object('zips.csv')
-		slcsp_for_csv_zipcodes('slcsp.csv')
-	end
+  def initialize(csv_row)
+    init(csv_row)
+    @plans = []
+    @@all << self
+  end
 
-	def slcsp_for_csv_zipcodes(path)
-    csv_rows = self.class.read_csv(path)
-		csv_rows.each do |csv_row| 
-			zipcode = csv_row["zipcode"]
-			find_plans_for_zip(zipcode)
-			CSV.open("test.csv", "ab") { |csv| csv << [zipcode, slcsp_rate] }
+
+	def self.lookup
+    self.all.each do |plan_finder|
+      plan_finder.find_plans_for_zip
+			CSV.open("test.csv", "ab") { |csv| csv << [plan_finder.zipcode, plan_finder.rate] }
 		end
 	end
 
 
-	def find_plans_for_zip(zipcode)
+	def find_plans_for_zip
 		@zips = Zip.lookup(zipcode)
 		@plans = Plan.lookup(zips.first) if zips.count == 1 || same_zip_rate_area?
-		@slcsp_rate = find_slcsp.rate if plans.any?
+ 		@rate = find_slcsp.rate if plans.any? 
 	end
 
 
@@ -62,24 +59,27 @@ class PlanFinder
 	end
 
 	def find_slcsp
-		plans.sort_by { |plan|	plan.rate }[1] 
+		plans.sort_by { |plan|	plan.rate }[1]
 	end
+
+  def self.all
+    @@all
+  end
 
 end
 
 class Plan 
 
 	extend ParseCSV
+  include Init
 
 	attr_accessor :plan_id, :state, :metal_level, :rate, :rate_area
 
 	@@all ||= Array.new
 
 	def initialize(csv_row)
-		csv_row.each do |attribute, value| 
-			instance_variable_set("@#{attribute}", value)
-		end
-		@@all << self
+		init(csv_row)
+    @@all << self
 	end
 
 
@@ -99,17 +99,17 @@ end
 class Zip 
 
 	extend ParseCSV
+  include Init
 
 	attr_accessor :zipcode, :state, :fips, :name, :rate_area
 
-	@@all ||= Array.new
+  @@all ||= Array.new  
 
-	def initialize(csv_row)
-		csv_row.each do |attribute, value| 
-			instance_variable_set("@#{attribute}", value)
-		end
-		@@all << self
-	end
+  def initialize(csv_row)
+    init(csv_row)
+    @@all << self
+  end
+
 
 
 	def self.lookup(zipcode)
@@ -121,3 +121,14 @@ class Zip
   end  
 
 end
+
+
+
+def run
+  Plan.csv_rows_to_object('plans.csv')
+  Zip.csv_rows_to_object('zips.csv')
+  PlanFinder.csv_rows_to_object('slcsp.csv')
+  PlanFinder.lookup 
+end
+
+run

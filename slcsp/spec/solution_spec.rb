@@ -8,5 +8,5 @@ describe PlanFinder do
   end
 
   it "finds all plans for a given zipcode" do
-  end
+  end	
 end
