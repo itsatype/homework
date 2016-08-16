@@ -37,12 +37,14 @@ class PlanFinder
     @@all << self
   end
 
+  def self.write_to_csv
+    CSV.open("test.csv", "ab") do |csv|
+      self.all.each { |plan| csv << [plan.zipcode, plan.rate] }
+    end
+  end
 
 	def self.lookup
-    self.all.each do |plan_finder|
-      plan_finder.find_plans_for_zip
-			CSV.open("test.csv", "ab") { |csv| csv << [plan_finder.zipcode, plan_finder.rate] }
-		end
+    self.all.each { |plan_finder| plan_finder.find_plans_for_zip }
 	end
 
 
@@ -129,6 +131,7 @@ def run
   Zip.csv_rows_to_object('zips.csv')
   PlanFinder.csv_rows_to_object('slcsp.csv')
   PlanFinder.lookup 
+  PlanFinder.write_to_csv
 end
 
 run
