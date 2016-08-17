@@ -1,0 +1,6 @@
+# Run the file by cd-ing into the lib folder and running 'ruby solution.rb' from the terminal
+# The code will generate the answers in a csv file name 'solution.csv'
+# My answers to the questions in the ReadMe have been included
+# Tests for this exercise can also be run by cd-ing into the root directory and running 'rspec' from the terminal
+
+#Thank you so much!

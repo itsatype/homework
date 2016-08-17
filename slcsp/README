@@ -28,9 +28,9 @@ reason or reasons are there? Fill in your explanation(s) below.
 
     Reason:
 
-    1) ???
+   1) The ZIP code does not have any plans associated with it.  Meaning, there is no plan for the zip within that state-rate_area
 
-    2) ???
+    2) The ZIP code is in multiple counties.  In some instances, even if that is the case, the SLCSP can be determined because the counties share the same rate area.  However, if there is a zipcode in multiple counties with different rate_areas, the SLCSP cannot be determined.
 
 Additional information
 ----------------------
