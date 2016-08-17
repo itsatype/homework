@@ -1,7 +1,7 @@
 require 'pry'
 require 'csv'
 
-module ParseCSV
+module CSVParser
 
 	def csv_rows_to_object(path)
     csv_rows = CSV.read(path, headers: true)
@@ -12,9 +12,9 @@ module ParseCSV
 
 end
 
-module Init
+module CSVImporter
 
-  def init(csv_row)
+  def new_by_csv(csv_row)
     csv_row.each do |attribute, value| 
       instance_variable_set("@#{attribute}", value) 
     end
@@ -24,15 +24,15 @@ end
 
 class PlanFinder
 	
-	extend ParseCSV
-  include Init
+	extend CSVParser
+  include CSVImporter
 	
 	attr_accessor :zips, :plans, :rate, :zipcode
 	
   @@all ||= Array.new  
 
   def initialize(csv_row)
-    init(csv_row)
+    new_by_csv(csv_row)
     @plans = []
     @@all << self
   end
@@ -72,16 +72,16 @@ end
 
 class Plan 
 
-	extend ParseCSV
-  include Init
+	extend CSVParser
+  include CSVImporter
 
 	attr_accessor :plan_id, :state, :metal_level, :rate, :rate_area
 
-	@@all ||= Array.new
+	@@plans ||= Array.new
 
 	def initialize(csv_row)
-		init(csv_row)
-    @@all << self
+		new_by_csv(csv_row)
+    @@plans << self
 	end
 
 
@@ -92,7 +92,7 @@ class Plan
 	end	
 
   def self.all
-    @@all
+    @@plans
   end  
 
 end
@@ -100,16 +100,16 @@ end
 
 class Zip 
 
-	extend ParseCSV
-  include Init
+	extend CSVParser
+  include CSVImporter
 
 	attr_accessor :zipcode, :state, :fips, :name, :rate_area
 
-  @@all ||= Array.new  
+  @@zips ||= Array.new  
 
   def initialize(csv_row)
-    init(csv_row)
-    @@all << self
+    new_by_csv(csv_row)
+    @@zips << self
   end
 
 
@@ -119,7 +119,7 @@ class Zip
 	end	
 
   def self.all
-    @@all
+    @@zips
   end  
 
 end
@@ -134,4 +134,4 @@ def run
   PlanFinder.write_to_csv
 end
 
-run
+# run
